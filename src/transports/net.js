@@ -113,6 +113,8 @@ module.exports = class Connection extends EventEmitter {
                     host: ircd_host,
                     port: ircd_port,
                     rejectUnauthorized: options.rejectUnauthorized,
+                    key: options.clientCertificate && options.clientCertificate.privateKey,
+                    cert: options.clientCertificate && options.clientCertificate.certificate,
                     localAddress: options.outgoing_addr,
                     family: this.getAddressFamily(options.outgoing_addr)
                 });
