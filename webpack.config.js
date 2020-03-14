@@ -11,7 +11,7 @@ module.exports = {
   output: {
     path: path.join(path.resolve(__dirname), 'dist', 'browser', 'static'),
     filename: 'browser.js',
-    library: 'irc-framework',
+    library: 'irc-framework-ns',
     libraryTarget: 'umd',
     umdNamedDefine: true
   },

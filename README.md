@@ -1,3 +1,5 @@
+Fork to be used in NativeScript projects.
+
 # irc-framework
 A better IRC framework for node.js. For bots and full clients. Read the [documentation](https://github.com/kiwiirc/irc-framework/blob/master/docs/clientapi.md).
 

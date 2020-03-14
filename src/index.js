@@ -8,6 +8,8 @@
 module.exports.Client = require('./client');
 module.exports.Client.setDefaultTransport(require('./transports/default'));
 
+module.exports.WebSocketHelper = require('./transports/websocket_helper');
+
 module.exports.ircLineParser = require('./irclineparser');
 module.exports.Message = require('./ircmessage');
 module.exports.MessageTags = require('./messagetags');

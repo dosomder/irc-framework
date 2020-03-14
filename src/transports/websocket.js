@@ -5,6 +5,7 @@
  */
 
 var EventEmitter = require('eventemitter3');
+var getWebSocket = require('./websocket_helper').getWebSocket;
 
 module.exports = class Connection extends EventEmitter {
     constructor(options) {
@@ -28,8 +29,10 @@ module.exports = class Connection extends EventEmitter {
         this.debugOut('writeLine() socket=' + (this.socket ? 'yes' : 'no') + ' connected=' + this.connected);
 
         if (this.socket && this.connected) {
-            this.socket.send(line, cb);
-        } else if (cb) {
+            this.socket.send(line);
+        }
+        if (cb) {
+            // nativescript-websockets doesn't support cb so call it directly
             setTimeout(cb, 0);
         }
     }
@@ -55,7 +58,7 @@ module.exports = class Connection extends EventEmitter {
         ws_addr += options.port ? ':' + options.port : '';
         ws_addr += options.path ? options.path : '';
 
-        socket = this.socket = new WebSocket(ws_addr);
+        socket = this.socket = getWebSocket(ws_addr);
 
         socket.onopen = function() {
             that.onSocketFullyConnected();

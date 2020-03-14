@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./net');
+module.exports = require('./websocket');
