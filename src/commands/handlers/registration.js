@@ -131,7 +131,8 @@ var handlers = {
         ];
 
         // Optional CAPs depending on settings
-        if (handler.connection.options.password) {
+        const saslAuth = getSaslAuth(handler);
+        if (saslAuth || handler.connection.options.sasl_mechanism === 'EXTERNAL') {
             want.push('sasl');
         }
         if (handler.connection.options.enable_chghost) {
@@ -179,8 +180,8 @@ var handlers = {
             }
             if (handler.network.cap.negotiating) {
                 if (handler.network.cap.isEnabled('sasl')) {
-                    if (handler.connection.options.sasl_mechanism === 'AUTHCOOKIE') {
-                        handler.connection.write('AUTHENTICATE AUTHCOOKIE');
+                    if (typeof handler.connection.options.sasl_mechanism === 'string') {
+                        handler.connection.write('AUTHENTICATE ' + handler.connection.options.sasl_mechanism);
                     } else {
                         handler.connection.write('AUTHENTICATE PLAIN');
                     }
@@ -241,25 +242,36 @@ var handlers = {
     },
 
     AUTHENTICATE: function(command, handler) {
-        var auth_str = handler.connection.options.nick + '\0' +
-            handler.connection.options.nick + '\0' +
-            handler.connection.options.password;
-        var b = Buffer.from(auth_str, 'utf8');
-        var b64 = b.toString('base64');
+        if (command.params[0] !== '+') {
+            if (handler.network.cap.negotiating) {
+                handler.connection.write('CAP END');
+                handler.network.cap.negotiating = false;
+            }
 
-        if (command.params[0] === '+') {
-            while (b64.length >= 400) {
-                handler.connection.write('AUTHENTICATE ' + b64.slice(0, 399));
-                b64 = b64.slice(399);
-            }
-            if (b64.length > 0) {
-                handler.connection.write('AUTHENTICATE ' + b64);
-            } else {
-                handler.connection.write('AUTHENTICATE +');
-            }
-        } else if (handler.network.cap.negotiating) {
-            handler.connection.write('CAP END');
-            handler.network.cap.negotiating = false;
+            return;
+        }
+
+        // Send blank authenticate for EXTERNAL mechanism
+        if (handler.connection.options.sasl_mechanism === 'EXTERNAL') {
+            handler.connection.write('AUTHENTICATE +');
+            return;
+        }
+
+        const saslAuth = getSaslAuth(handler);
+        const auth_str = saslAuth.account + '\0' +
+            saslAuth.account + '\0' +
+            saslAuth.password;
+        const b = Buffer.from(auth_str, 'utf8');
+        let b64 = b.toString('base64');
+
+        while (b64.length >= 400) {
+            handler.connection.write('AUTHENTICATE ' + b64.slice(0, 399));
+            b64 = b64.slice(399);
+        }
+        if (b64.length > 0) {
+            handler.connection.write('AUTHENTICATE ' + b64);
+        } else {
+            handler.connection.write('AUTHENTICATE +');
         }
     },
 
@@ -343,6 +355,33 @@ var handlers = {
         // noop
     }
 };
+
+/**
+ * Only use the nick+password combo if an account has not been specifically given.
+ * If an account:{account,password} has been given, use it for SASL auth.
+ */
+function getSaslAuth(handler) {
+    const options = handler.connection.options;
+    if (options.account && options.account.account) {
+        // An account username has been given, use it for SASL auth
+        return {
+            account: options.account.account,
+            password: options.account.password || '',
+        };
+    } else if (options.account) {
+        // An account object existed but without auth credentials
+        return null;
+    } else if (options.password) {
+        // No account credentials found but we have a server password. Also use it for SASL
+        // for ease of use
+        return {
+            account: options.nick,
+            password: options.password,
+        };
+    }
+
+    return null;
+}
 
 module.exports = function AddCommandHandlers(command_controller) {
     _.each(handlers, function(handler, handler_command) {

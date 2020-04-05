@@ -17,6 +17,10 @@ new Irc.Client({
     auto_reconnect_max_retries: 3,
     ping_interval: 30,
     ping_timeout: 120,
+    account: {
+        account: 'username',
+        password: 'account_password',
+    },
     webirc: {
         password: '',
         username: '*',
@@ -27,7 +31,11 @@ new Irc.Client({
             'local-port': 6697,
             'remote-port': 21726,
         },
-    }
+    },
+    client_certificate: {
+        private_key: '-----BEGIN RSA PRIVATE KEY-----[...]',
+        certificate: '-----BEGIN CERTIFICATE-----[...]',
+    },
 });
 ~~~
 

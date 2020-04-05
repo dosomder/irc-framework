@@ -1,6 +1,6 @@
 {
   "name": "irc-framework-ns",
-  "version": "4.5.2",
+  "version": "4.8.1",
   "description": "A better IRC framework for node.js (NativeScript variant)",
   "main": "src/",
   "browser": "dist/browser/src/",
